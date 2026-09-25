@@ -1,0 +1,65 @@
+<project name="DistributedDatabase" default="build" basedir=".">
+
+    <property name="src.main" value="src/main/java"/>
+    <property name="src.test" value="src/test/java"/>
+    <property name="build.dir" value="build"/>
+    <property name="classes.dir" value="${build.dir}/classes"/>
+    <property name="test.classes.dir" value="${build.dir}/test-classes"/>
+    <property name="lib.dir" value="lib"/>
+    <property name="dist.dir" value="dist"/>
+
+    <path id="project.classpath">
+        <fileset dir="${lib.dir}">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+
+    <path id="test.classpath">
+        <path refid="project.classpath"/>
+        <pathelement location="${classes.dir}"/>
+        <pathelement location="${test.classes.dir}"/>
+    </path>
+
+    <target name="clean" description="Clean all generated build and distribution files">
+        <delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}"/>
+    </target>
+
+    <target name="init">
+        <mkdir dir="${classes.dir}"/>
+        <mkdir dir="${test.classes.dir}"/>
+        <mkdir dir="${dist.dir}"/>
+        <mkdir dir="${lib.dir}"/>
+    </target>
+
+    <target name="compile" depends="init" description="Compile main source code">
+        <javac srcdir="${src.main}" destdir="${classes.dir}" includeantruntime="false" encoding="UTF-8">
+            <classpath refid="project.classpath"/>
+        </javac>
+    </target>
+
+    <target name="compile-tests" depends="compile" description="Compile test source code">
+        <javac srcdir="${src.test}" destdir="${test.classes.dir}" includeantruntime="false" encoding="UTF-8">
+            <classpath refid="test.classpath"/>
+        </javac>
+    </target>
+
+    <target name="test" depends="compile-tests" description="Run JUnit 5 test suite">
+        <java classpathref="test.classpath" classname="org.junit.platform.console.ConsoleLauncher" fork="true" failonerror="true">
+            <arg value="--scan-classpath"/>
+            <arg value="--reports-dir=${build.dir}/test-reports"/>
+        </java>
+    </target>
+
+    <target name="jar" depends="compile" description="Package the application into an executable JAR">
+        <jar destfile="${dist.dir}/database-master.jar" basedir="${classes.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="network.MasterNode"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <!-- The master target: runs tests and packages the JAR -->
+    <target name="build" depends="test, jar" description="Compile, test, and package the complete project"/>
+
+</project>
